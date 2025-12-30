@@ -14,14 +14,19 @@ Construir uma solução inicial com foco em IA para processamento de exames méd
 Entregas técnicas 
 
 Processamento de dados médicos 
+
 ● Classificação de exames com Machine Learning: você deve escolher uma base de dados em forma de tabela e realizar o diagnóstico: “a pessoa tem ou não uma doença”. Isso acontecerá via algoritmos de aprendizado de máquina.
+
 ● EXTRA: além do algoritmo de diagnóstico com dados estruturados, você também pode optar por realizar um diagnóstico com dados de imagem, utilizando redes neurais convolucionais (CNN). (Observação: isso não é obrigatório, mas pode aumentar a sua nota caso você não atinja a pontuação máxima na atividade). 
 
 Dados e Modelos 
+
 ● Escolha um ou mais datasets médicos públicos e discuta o problema a ser resolvido.  
 
 Exploração de dados: 
+
 ● Carregue a base de dados e explore suas características; 
+
 ● Analise estatísticas descritivas e visualize distribuições relevantes, discutindo os resultados.  
 
 Pré-processamento de dados: 
@@ -77,16 +82,30 @@ Código e Organização
 
 
 Entregáveis da Fase 1 
+
 Arquivo PDF com link do repositório Git: 
+
 ● Código-fonte completo; 
+
 ● Dockerfile e README.md com instruções de execução; 
+
 ● Dataset (ou link para download); 
+
+
 ● Resultados obtidos (prints, gráficos e análises); 
+
 ● Relatório técnico explicando: 
+
    ○ Estratégias de pré-processamento; 
+   
    ○ Modelos usados e por quê; 
+   
    ○ Resultados e interpretação dos dados. 
+   
 
 Vídeo de demonstração:
+
 ● Realizar o upload no YouTube ou Vimeo (usando as configurações “público” ou “não listado”). A duração do vídeo deve ser de até 15 minutos; 
+
 ● Demonstração do sistema em execução com breve explicação do fluxo.
+
