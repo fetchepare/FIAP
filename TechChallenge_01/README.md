@@ -27,32 +27,54 @@ Exploração de dados:
 Pré-processamento de dados: 
 
 ● Realize a limpeza dos dados, tratando valores ausentes e inconsistentes (se necessário); 
+
 ● Pipeline de pré-processamento de dados em Python. ○ Converta variáveis categóricas e numéricas em formatos adequados para modelagem. 
+
 ● Realize a análise de correlação. 
 
+
 Modelagem: 
+
 ● Crie modelos preditivos de classificação utilizando duas ou mais técnicas à sua escolha (por exemplo: Regressão logística, Árvore de Decisão, KNN etc); 
+
 ● Separação clara entre treino, validação e teste. 
 
+
 Treinamento e avaliação do modelo: 
+
 ● Treine o modelo com o conjunto de treinamento; 
+
 ● Avaliação do modelo com os dados de teste e métricas adequadas (accuracy, recall, F1-score). Discuta a escolha da métrica considerando o problema; 
+
 ● Apresente uma interpretação dos resultados (utilize técnicas como feature importance e SHAP); 
+
 ● Discuta os resultados de maneira crítica. O seu modelo pode ser utilizado na prática? Como? (Lembre-se que o médico sempre deve ter a palavra final no diagnóstico). 
 
+
 Exemplo de fontes de dados que podem ser utilizadas neste desafio:  
+
 ● Tarefa principal a ser avaliada: 
+
   ○ Diagnóstico de câncer de mama (maligno ou benigno): https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data/data; 
+  
   ○ Diagnóstico de diabetes: https://www.kaggle.com/datasets/mathchi/diabetes-data-set/data 
+  
   ○ Outro de sua preferência.
+  
 
 ● Tarefa extra - visão computacional:  
+
   ○ Detecção de Pneumonia em Radiografias: https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia  
+  
   ○ Detecção de câncer de mama: https://www.kaggle.com/datasets/awsaf49/cbis-ddsm-breast-cancer-image-dataset/data 
+  
 
 Código e Organização 
-● Projeto em Python estruturado e documentado; 
+
+● Projeto em Python estruturado e documentado;
+
 ● Notebook Jupyter ou scripts Python para demonstração dos resultados. 
+
 
 Entregáveis da Fase 1 
 Arquivo PDF com link do repositório Git: 
