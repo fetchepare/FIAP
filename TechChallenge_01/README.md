@@ -25,6 +25,7 @@ Exploração de dados:
 ● Analise estatísticas descritivas e visualize distribuições relevantes, discutindo os resultados.  
 
 Pré-processamento de dados: 
+
 ● Realize a limpeza dos dados, tratando valores ausentes e inconsistentes (se necessário); 
 ● Pipeline de pré-processamento de dados em Python. ○ Converta variáveis categóricas e numéricas em formatos adequados para modelagem. 
 ● Realize a análise de correlação. 
