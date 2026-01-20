@@ -1,7 +1,7 @@
 # Dockerfile para execução do TechChallenge01.ipynb
 # Versão: 1.0
-# Autor: [Seu Nome/Equipe]
-# Data: [Data]
+# Autor: César Melo Dutra/Fernando Ramos Etchepare
+# Data: 20/01/2026
 
 # Use imagem base do Python
 FROM python:3.9-slim
