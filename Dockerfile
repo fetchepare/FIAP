@@ -56,4 +56,3 @@ CMD ["jupyter", "lab", \
      "--NotebookApp.token=''", \
      "--NotebookApp.password=''", \
      "--notebook-dir=/home/jupyter/notebooks"]
-EOF
