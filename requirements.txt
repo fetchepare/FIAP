@@ -1,4 +1,0 @@
-pygame>=2.5.2
-numpy
-google-genai
-python-dotenv
