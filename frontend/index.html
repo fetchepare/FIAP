@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IA Saúde da Mulher — Monitor Multimodal</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #F4F7F6;
+  --sidebar:  #1F3B47;
+  --primary:  #3D7A8C;
+  --secondary:#84B59F;
+  --accent:   #C97B63;
+  --critico:  #B33A3A;
+  --alto:     #C97B63;
+  --medio:    #E4A84B;
+  --baixo:    #84B59F;
+  --text:     #1F2D2E;
+  --muted:    #5B6B6C;
+  --card:     #FFFFFF;
+  --border:   #DDE6E3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sidebar{width:230px;min-width:230px;background:var(--sidebar);display:flex;flex-direction:column;padding:0;overflow:hidden}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo .logo-title{color:#fff;font-size:15px;font-weight:700;line-height:1.3}
+.sidebar-logo .logo-sub{color:#84adb5;font-size:11px;margin-top:3px}
+.sidebar-logo .logo-icon{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:18px}
+nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-section{font-size:10px;font-weight:700;color:#84adb5;letter-spacing:1.5px;padding:14px 20px 6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;color:#c5d8dc;font-size:13.5px;cursor:pointer;border-left:3px solid transparent;transition:.15s}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:rgba(61,122,140,.3);color:#fff;border-left-color:var(--secondary)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-footer .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,123,99,.2);color:#e8a090;border-radius:20px;padding:5px 10px;font-size:11px}
+.sidebar-footer .badge .dot{width:6px;height:6px;background:#C97B63;border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#topbar .page-title{font-size:17px;font-weight:600;color:var(--text)}
+#topbar .topbar-right{display:flex;align-items:center;gap:14px}
+.alert-bell{position:relative;cursor:pointer;color:var(--muted);font-size:18px;padding:6px}
+.alert-bell .badge-count{position:absolute;top:2px;right:2px;background:var(--critico);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.avatar{width:32px;height:32px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+#content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* ── CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.stat-card .stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:4px}
+.stat-card .stat-value{font-size:28px;font-weight:700;line-height:1}
+.stat-card .stat-label{font-size:12px;color:var(--muted)}
+.stat-card .stat-trend{font-size:11px;margin-top:2px}
+
+.card{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:14px;font-weight:600}
+.card-body{padding:20px}
+
+/* ── RISK BADGES ── */
+.risk-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.risk-badge.critico{background:#fde8e8;color:#B33A3A}
+.risk-badge.alto    {background:#fde8dd;color:#C97B63}
+.risk-badge.medio   {background:#fdf3dd;color:#a07020}
+.risk-badge.baixo   {background:#e8f5f0;color:#2d7a5e}
+.risk-dot{width:7px;height:7px;border-radius:50%}
+.risk-dot.critico{background:#B33A3A}
+.risk-dot.alto    {background:#C97B63}
+.risk-dot.medio   {background:#E4A84B}
+.risk-dot.baixo   {background:#84B59F}
+
+/* ── PATIENT LIST ── */
+.patient-table{width:100%;border-collapse:collapse}
+.patient-table th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 16px;border-bottom:1px solid var(--border);background:#f9fbfa}
+.patient-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle}
+.patient-table tr:last-child td{border-bottom:none}
+.patient-table tr:hover td{background:#f7faf9;cursor:pointer}
+.patient-name{font-weight:600;color:var(--text)}
+.patient-ctx{font-size:11px;color:var(--muted);margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#2e6070}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:#fde8e8;color:#B33A3A;border:1px solid #f5c0c0}
+
+/* ── ALERTS LIST ── */
+.alert-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.alert-item:last-child{border-bottom:none}
+.alert-item .a-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.alert-item.critico .a-icon{background:#fde8e8;color:#B33A3A}
+.alert-item.alto    .a-icon{background:#fde8dd;color:#C97B63}
+.alert-item.medio   .a-icon{background:#fdf3dd;color:#a07020}
+.alert-item.baixo   .a-icon{background:#e8f5f0;color:#2d7a5e}
+.alert-item .a-body{flex:1}
+.alert-item .a-title{font-size:13px;font-weight:600;line-height:1.4}
+.alert-item .a-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.alert-item .a-msg{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+.alert-item.lido{opacity:.55}
+
+/* ── SCORE BARS ── */
+.score-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.score-row .s-label{font-size:12px;color:var(--muted);width:160px;flex-shrink:0}
+.score-row .s-bar-wrap{flex:1;background:#edf1f0;border-radius:20px;height:8px;overflow:hidden}
+.score-row .s-bar{height:100%;border-radius:20px;transition:width .6s ease}
+.score-row .s-val{font-size:12px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+
+/* ── VITALS FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:12px;font-weight:600;color:var(--muted)}
+.form-group input,.form-group select{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13.5px;color:var(--text);background:#fff;outline:none;transition:.15s}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(61,122,140,.1)}
+.form-full{grid-column:1/-1}
+
+/* ── LIVE MONITOR ── */
+.monitor-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.vital-big{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px;text-align:center}
+.vital-big .v-value{font-size:48px;font-weight:700;line-height:1}
+.vital-big .v-label{font-size:12px;color:var(--muted);margin-top:4px}
+.vital-big .v-unit{font-size:16px;color:var(--muted);font-weight:400}
+.vitals-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#84B59F;animation:pulse 1s infinite;margin-right:6px}
+
+/* ── DETAIL VIEW ── */
+.detail-header{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.patient-avatar-big{width:60px;height:60px;border-radius:14px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;flex-shrink:0}
+.detail-info .name{font-size:20px;font-weight:700}
+.detail-info .meta{font-size:13px;color:var(--muted);margin-top:3px}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:#1F3B47;color:#fff;border-radius:10px;padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideIn .3s ease;max-width:340px}
+.toast.error{background:#B33A3A}
+.toast.success{background:#2d7a5e}
+@keyframes slideIn{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── MISC ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.empty-state{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.tag{display:inline-block;background:#edf3f7;color:var(--primary);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600}
+.anomalia-item{background:#fff8f6;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px;font-size:12px;color:var(--text);margin-bottom:6px;line-height:1.5}
+.fusion-score-card{border-radius:10px;padding:14px;border:1px solid var(--border);margin-bottom:10px}
+.fusion-score-card .fc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.fusion-score-card .fc-cat{font-size:13px;font-weight:600}
+.fusion-score-card .fc-origin{font-size:11px;color:var(--muted)}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:18px}
+.back-btn:hover{text-decoration:underline}
+.search-bar{border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;width:240px;outline:none;background:#fff}
+.search-bar:focus{border-color:var(--primary)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🩺</div>
+    <div class="logo-title">IA Saúde da Mulher</div>
+    <div class="logo-sub">Monitor Multimodal v0.2</div>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="nav('dashboard')"><span class="icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="nav('patients')"><span class="icon">👩‍⚕️</span> Pacientes</div>
+    <div class="nav-item" onclick="nav('alerts')"><span class="icon">🔔</span> Alertas</div>
+    <div class="nav-section">Análise</div>
+    <div class="nav-item" onclick="nav('new-analysis')"><span class="icon">🔬</span> Nova Análise</div>
+    <div class="nav-item" onclick="nav('live-monitor')"><span class="icon">📡</span> Monitor ao Vivo</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="badge"><span class="dot"></span> Sistema ativo</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<div id="main">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <div class="alert-bell" onclick="nav('alerts')" title="Ver alertas">
+        🔔
+        <div class="badge-count" id="alert-count">0</div>
+      </div>
+      <div class="avatar">IA</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- ── VIEW: DASHBOARD ── -->
+    <div id="view-dashboard" class="view">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="background:#e8f0f5">👩</div><div class="stat-value" id="s-pacientes">—</div><div class="stat-label">Pacientes monitoradas</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fde8dd">🔔</div><div class="stat-value" id="s-alertas">—</div><div class="stat-label">Alertas não lidos</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fde8e8">🚨</div><div class="stat-value" id="s-criticos">—</div><div class="stat-label">Alto/crítico ativos</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#e8f5f0">✅</div><div class="stat-value" id="s-baixo">—</div><div class="stat-label">Risco baixo</div></div>
+      </div>
+
+      <div class="two-col" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header"><h3>Distribuição de Risco</h3></div>
+          <div class="card-body" style="height:220px;position:relative">
+            <canvas id="chart-risco"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Alertas Recentes</h3><span style="font-size:11px;color:var(--muted)">últimas 24h</span></div>
+          <div class="card-body" id="recent-alerts" style="padding:0 20px;max-height:220px;overflow-y:auto"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Visão Geral das Pacientes</h3></div>
+        <table class="patient-table" id="dash-patient-table">
+          <thead><tr><th>Paciente</th><th>Contexto</th><th>Risco Atual</th><th>Última análise</th><th>Ação</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── VIEW: PATIENTS ── -->
+    <div id="view-patients" class="view" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <input class="search-bar" placeholder="🔍  Buscar paciente..." oninput="filterPatients(this.value)"/>
+        <button class="btn btn-primary" onclick="nav('new-analysis')">+ Nova Análise</button>
+      </div>
+      <div class="card">
+        <table class="patient-table" id="patients-table">
+          <thead><tr><th>Nome</th><th>Idade</th><th>Contexto clínico</th><th>Gestante</th><th>Risco</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── VIEW: PATIENT DETAIL ── -->
+    <div id="view-patient-detail" class="view" style="display:none">
+      <div class="back-btn" onclick="nav('patients')">← Voltar para pacientes</div>
+      <div class="detail-header">
+        <div class="patient-avatar-big" id="det-avatar"></div>
+        <div class="detail-info">
+          <div class="name" id="det-name"></div>
+          <div class="meta" id="det-meta"></div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <div id="det-risk-badge"></div>
+          <button class="btn btn-primary btn-sm" onclick="openLiveMonitor()">📡 Monitor ao vivo</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('vitals')">Sinais Vitais</div>
+        <div class="tab" onclick="switchTab('audio')">Análise de Áudio</div>
+        <div class="tab" onclick="switchTab('video')">Análise de Vídeo</div>
+        <div class="tab" onclick="switchTab('fusion')">Fusão Multimodal</div>
+        <div class="tab" onclick="switchTab('history')">Alertas</div>
+      </div>
+
+      <!-- Tab: Vitais -->
+      <div class="tab-content active" id="tab-vitals">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>Pressão Arterial — Histórico</h3><span class="tag">últimas leituras</span></div>
+          <div class="card-body" style="height:220px;position:relative"><canvas id="chart-pa"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>Batimento Cardíaco Fetal</h3></div>
+          <div class="card-body" style="height:180px;position:relative"><canvas id="chart-bcf"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Anomalias Detectadas</h3></div>
+          <div class="card-body" id="vitals-anomalias"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Áudio -->
+      <div class="tab-content" id="tab-audio">
+        <div id="audio-list"></div>
+      </div>
+
+      <!-- Tab: Vídeo -->
+      <div class="tab-content" id="tab-video">
+        <div id="video-list"></div>
+      </div>
+
+      <!-- Tab: Fusão -->
+      <div class="tab-content" id="tab-fusion">
+        <div id="fusion-list"></div>
+      </div>
+
+      <!-- Tab: Alertas -->
+      <div class="tab-content" id="tab-history">
+        <div id="patient-alerts-list"></div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: ALERTS ── -->
+    <div id="view-alerts" class="view" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <select id="alert-filter" onchange="loadAlerts()" class="search-bar" style="width:180px">
+          <option value="">Todos os níveis</option>
+          <option value="critico">Crítico</option>
+          <option value="alto">Alto</option>
+          <option value="medio">Médio</option>
+          <option value="baixo">Baixo</option>
+        </select>
+        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Marcar todos como lidos</button>
+      </div>
+      <div class="card">
+        <div class="card-body" id="all-alerts-list" style="padding:0 20px"></div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: NEW ANALYSIS ── -->
+    <div id="view-new-analysis" class="view" style="display:none">
+      <div class="two-col">
+        <!-- Sinais vitais -->
+        <div class="card">
+          <div class="card-header"><h3>💓 Registrar Sinais Vitais</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group form-full">
+                <label>Paciente</label>
+                <select id="v-paciente" class="form-group input"></select>
+              </div>
+              <div class="form-group">
+                <label>PA Sistólica (mmHg)</label>
+                <input type="number" id="v-sist" placeholder="ex: 120"/>
+              </div>
+              <div class="form-group">
+                <label>PA Diastólica (mmHg)</label>
+                <input type="number" id="v-diast" placeholder="ex: 80"/>
+              </div>
+              <div class="form-group">
+                <label>BCF (bpm) — gestantes</label>
+                <input type="number" id="v-bcf" placeholder="ex: 140"/>
+              </div>
+              <div class="form-group">
+                <label>Proteinúria</label>
+                <select id="v-prot">
+                  <option value="">Não testada</option>
+                  <option value="true">Positiva</option>
+                  <option value="false">Negativa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Medicação hormonal</label>
+                <input type="text" id="v-med" placeholder="ex: estradiol"/>
+              </div>
+              <div class="form-group">
+                <label>Dose (mg)</label>
+                <input type="number" id="v-dose" placeholder="ex: 2.0" step="0.1"/>
+              </div>
+              <div class="form-full">
+                <button class="btn btn-primary" style="width:100%" onclick="submitVitals()">Registrar e analisar</button>
+              </div>
+            </div>
+            <div id="vitals-result" style="margin-top:14px;display:none"></div>
+          </div>
+        </div>
+
+        <!-- Áudio / Vídeo upload -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="card-header"><h3>🎙️ Análise de Áudio</h3></div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group form-full">
+                  <label>Paciente</label>
+                  <select id="a-paciente"></select>
+                </div>
+                <div class="form-group form-full">
+                  <label>Contexto clínico</label>
+                  <select id="a-contexto">
+                    <option value="consulta_ginecologica">Consulta ginecológica</option>
+                    <option value="pre_natal">Pré-natal</option>
+                    <option value="pos_parto">Pós-parto</option>
+                    <option value="triagem_violencia">Triagem de violência</option>
+                  </select>
+                </div>
+                <div class="form-group form-full">
+                  <label>Arquivo de áudio (.wav/.mp3)</label>
+                  <input type="file" id="a-file" accept="audio/*"/>
+                </div>
+                <div class="form-full">
+                  <button class="btn btn-primary" style="width:100%" onclick="submitAudio()">Analisar áudio</button>
+                </div>
+              </div>
+              <div id="audio-result" style="margin-top:14px;display:none"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>🎥 Análise de Vídeo</h3></div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group form-full">
+                  <label>Paciente</label>
+                  <select id="vid-paciente"></select>
+                </div>
+                <div class="form-group form-full">
+                  <label>Contexto clínico</label>
+                  <select id="vid-contexto">
+                    <option value="cirurgia_ginecologica">Cirurgia ginecológica</option>
+                    <option value="consulta_ginecologica">Consulta ginecológica</option>
+                    <option value="triagem_violencia">Triagem de violência</option>
+                    <option value="fisioterapia">Fisioterapia</option>
+                  </select>
+                </div>
+                <div class="form-group form-full">
+                  <label>Arquivo de vídeo (.mp4/.webm)</label>
+                  <input type="file" id="vid-file" accept="video/*"/>
+                </div>
+                <div class="form-full">
+                  <button class="btn btn-primary" style="width:100%" onclick="submitVideo()">Analisar vídeo</button>
+                </div>
+              </div>
+              <div id="video-result" style="margin-top:14px;display:none"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: LIVE MONITOR ── -->
+    <div id="view-live-monitor" class="view" style="display:none">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <select id="monitor-patient" class="search-bar" style="width:220px" onchange="startMonitor()"></select>
+        <div><span class="live-dot"></span><span style="font-size:13px;color:var(--muted)">Transmissão ao vivo — atualização a cada 2s</span></div>
+      </div>
+
+      <div class="vitals-row">
+        <div class="vital-big">
+          <div class="v-value" id="live-sist" style="color:var(--primary)">—</div>
+          <div class="v-label">Pressão Sistólica <span class="v-unit">mmHg</span></div>
+        </div>
+        <div class="vital-big">
+          <div class="v-value" id="live-diast" style="color:var(--secondary)">—</div>
+          <div class="v-label">Pressão Diastólica <span class="v-unit">mmHg</span></div>
+        </div>
+        <div class="vital-big">
+          <div class="v-value" id="live-bcf" style="color:var(--accent)">—</div>
+          <div class="v-label">Batimento Cardíaco Fetal <span class="v-unit">bpm</span></div>
+        </div>
+      </div>
+
+      <div class="monitor-grid">
+        <div class="card">
+          <div class="card-header"><h3>Pressão Arterial em Tempo Real</h3></div>
+          <div class="card-body" style="height:240px;position:relative"><canvas id="chart-live-pa"></canvas></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card" style="flex:1">
+            <div class="card-header"><h3>Nível de Risco</h3></div>
+            <div class="card-body" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;height:80px">
+              <div id="live-risk-badge"></div>
+              <div style="font-size:11px;color:var(--muted)" id="live-risk-ts"></div>
+            </div>
+          </div>
+          <div class="card" style="flex:2">
+            <div class="card-header"><h3>Log de Eventos</h3></div>
+            <div class="card-body" id="live-log" style="font-size:11.5px;font-family:monospace;color:var(--muted);height:130px;overflow-y:auto;padding:8px 12px;background:#f8faf9;border-radius:6px;line-height:1.8"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+const API = 'http://localhost:8000';
+let allPatients = [];
+let currentPatientId = null;
+let liveWs = null;
+let liveChart = null;
+let liveData = { labels:[], sist:[], diast:[] };
+let paChart = null, bcfChart = null, riscoChart = null;
+
+// ════════════════════════════════════════════════════
+// NAVEGAÇÃO
+// ════════════════════════════════════════════════════
+const TITLES = {
+  'dashboard':'Dashboard','patients':'Pacientes','patient-detail':'Detalhe da Paciente',
+  'alerts':'Alertas','new-analysis':'Nova Análise','live-monitor':'Monitor ao Vivo'
+};
+function nav(view){
+  document.querySelectorAll('.view').forEach(v=>v.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById('view-'+view);
+  if(el) el.style.display='block';
+  document.getElementById('page-title').textContent = TITLES[view]||view;
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.textContent.trim().toLowerCase().includes(TITLES[view]?.split(' ')[0]?.toLowerCase()||'x'))
+      n.classList.add('active');
+  });
+  if(view==='dashboard')    loadDashboard();
+  if(view==='patients')     loadPatients();
+  if(view==='alerts')       loadAlerts();
+  if(view==='new-analysis') loadNewAnalysis();
+  if(view==='live-monitor') loadLiveMonitor();
+}
+
+// ════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════
+function toast(msg, type='info'){
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${type==='error'?'❌':type==='success'?'✅':'ℹ️'}</span> ${msg}`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+
+// ════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════
+const NIVEL_ICON = {critico:'🚨',alto:'⚠️',medio:'🔶',baixo:'✅'};
+const CTX_LABEL = {
+  pre_natal:'Pré-natal', pos_parto:'Pós-parto',
+  consulta_ginecologica:'Consulta ginecológica', triagem_violencia:'Triagem violência',
+  cirurgia_ginecologica:'Cirurgia ginecológica', fisioterapia:'Fisioterapia'
+};
+const CAT_LABEL = {
+  saude_materna:'Saúde Materna', complicacao_cirurgica:'Complicação Cirúrgica',
+  violencia_domestica:'Violência Doméstica', saude_psicologica:'Saúde Psicológica',
+  anomalia_ginecologica:'Anomalia Ginecológica'
+};
+
+function riskBadge(nivel){
+  return `<span class="risk-badge ${nivel}"><span class="risk-dot ${nivel}"></span>${nivel.toUpperCase()}</span>`;
+}
+function scoreColor(v){
+  if(v>=0.7) return '#B33A3A';
+  if(v>=0.5) return '#C97B63';
+  if(v>=0.3) return '#E4A84B';
+  return '#84B59F';
+}
+function fmtTs(ts){
+  if(!ts) return '—';
+  return new Date(ts.replace(' ','T')+'Z').toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+// ════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════
+async function loadDashboard(){
+  try {
+    const [stats, alerts, patients] = await Promise.all([
+      fetch(`${API}/dashboard/stats`).then(r=>r.json()),
+      fetch(`${API}/dashboard/alerts?limit=6`).then(r=>r.json()),
+      fetch(`${API}/patients`).then(r=>r.json()),
+    ]);
+    allPatients = patients;
+
+    document.getElementById('s-pacientes').textContent = stats.total_pacientes;
+    document.getElementById('s-alertas').textContent   = stats.alertas_nao_lidos;
+    document.getElementById('s-criticos').textContent  = stats.alertas_criticos;
+    document.getElementById('alert-count').textContent = stats.alertas_nao_lidos;
+    const dist = stats.risco_distribuicao || {};
+    document.getElementById('s-baixo').textContent = dist.baixo||0;
+
+    // Donut risco
+    if(riscoChart) riscoChart.destroy();
+    const ctx = document.getElementById('chart-risco').getContext('2d');
+    riscoChart = new Chart(ctx,{
+      type:'doughnut',
+      data:{
+        labels:['Crítico','Alto','Médio','Baixo'],
+        datasets:[{data:[dist.critico||0,dist.alto||0,dist.medio||0,dist.baixo||0],
+          backgroundColor:['#B33A3A','#C97B63','#E4A84B','#84B59F'],borderWidth:0,hoverOffset:6}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:12},boxWidth:12}}}}
+    });
+
+    // Alertas recentes
+    const ar = document.getElementById('recent-alerts');
+    ar.innerHTML = alerts.slice(0,5).map(a=>`
+      <div class="alert-item ${a.nivel} ${a.lido?'lido':''}">
+        <div class="a-icon">${NIVEL_ICON[a.nivel]||'📢'}</div>
+        <div class="a-body">
+          <div class="a-title">${a.paciente_nome} <span style="font-weight:400;font-size:11px;color:var(--muted)">· ${CTX_LABEL[a.categoria]||a.categoria}</span></div>
+          <div class="a-msg">${a.mensagem.substring(0,120)}${a.mensagem.length>120?'…':''}</div>
+          <div class="a-meta">${fmtTs(a.timestamp)}</div>
+        </div>
+      </div>`).join('') || '<div class="empty-state">Nenhum alerta</div>';
+
+    // Mini tabela
+    const tbody = document.querySelector('#dash-patient-table tbody');
+    tbody.innerHTML = patients.map(p=>`
+      <tr onclick="openPatient(${p.id})">
+        <td><div class="patient-name">${p.nome}</div><div class="patient-ctx">${CTX_LABEL[p.contexto]||p.contexto}</div></td>
+        <td>${CTX_LABEL[p.contexto]||p.contexto}</td>
+        <td>${riskBadge(p.nivel_risco)}</td>
+        <td style="font-size:12px;color:var(--muted)">Hoje</td>
+        <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openPatient(${p.id})">Ver detalhe</button></td>
+      </tr>`).join('');
+  } catch(e){ toast('Erro ao carregar dashboard: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════
+// PACIENTES
+// ════════════════════════════════════════════════════
+async function loadPatients(){
+  try {
+    const patients = await fetch(`${API}/patients`).then(r=>r.json());
+    allPatients = patients;
+    renderPatientsTable(patients);
+  } catch(e){ toast('Erro: '+e.message,'error'); }
+}
+function renderPatientsTable(patients){
+  const tbody = document.querySelector('#patients-table tbody');
+  tbody.innerHTML = patients.map(p=>`
+    <tr onclick="openPatient(${p.id})">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:34px;height:34px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">${p.nome[0]}</div>
+          <div><div class="patient-name">${p.nome}</div><div class="patient-ctx">ID #${p.id}</div></div>
+        </div>
+      </td>
+      <td>${p.idade||'—'} anos</td>
+      <td>${CTX_LABEL[p.contexto]||p.contexto}</td>
+      <td>${p.gestante?`<span class="tag">Sim — ${p.semanas_gestacao||'?'}sem</span>`:'Não'}</td>
+      <td>${riskBadge(p.nivel_risco)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openPatient(${p.id})">Detalhes</button>
+        <button class="btn btn-outline btn-sm" style="margin-left:4px" onclick="event.stopPropagation();openLiveForPatient(${p.id})">📡</button>
+      </td>
+    </tr>`).join('');
+}
+function filterPatients(q){
+  renderPatientsTable(allPatients.filter(p=>p.nome.toLowerCase().includes(q.toLowerCase())));
+}
+
+// ════════════════════════════════════════════════════
+// DETALHE DA PACIENTE
+// ════════════════════════════════════════════════════
+async function openPatient(id){
+  currentPatientId = id;
+  nav('patient-detail');
+  try {
+    const [p, vitals, audio, video, fusion] = await Promise.all([
+      fetch(`${API}/patients/${id}`).then(r=>r.json()),
+      fetch(`${API}/patients/${id}/vitals`).then(r=>r.json()),
+      fetch(`${API}/patients/${id}/audio`).then(r=>r.json()),
+      fetch(`${API}/patients/${id}/video`).then(r=>r.json()),
+      fetch(`${API}/patients/${id}/fusion`).then(r=>r.json()),
+    ]);
+
+    // Header
+    document.getElementById('det-avatar').textContent = p.nome[0];
+    document.getElementById('det-name').textContent  = p.nome;
+    document.getElementById('det-meta').textContent  =
+      `${p.idade||'—'} anos · ${CTX_LABEL[p.contexto]||p.contexto}` +
+      (p.gestante ? ` · Gestante ${p.semanas_gestacao||'?'} sem` : '');
+    document.getElementById('det-risk-badge').innerHTML =
+      p.ultima_fusao ? riskBadge(p.ultima_fusao.nivel_risco_geral) : riskBadge('baixo');
+
+    // Reset tabs
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-vitals').classList.add('active');
+    document.querySelectorAll('.tab')[0].classList.add('active');
+
+    renderVitals(vitals, p.gestante);
+    renderAudio(audio);
+    renderVideo(video);
+    renderFusion(fusion);
+    renderPatientAlerts(id);
+  } catch(e){ toast('Erro ao carregar paciente: '+e.message,'error'); }
+}
+
+function renderVitals(vitals, gestante){
+  if(!vitals.length){
+    document.getElementById('vitals-anomalias').innerHTML='<div class="empty-state">Sem leituras registradas</div>';
+    return;
+  }
+  const labels = vitals.map(v=>fmtTs(v.timestamp));
+  const sist   = vitals.map(v=>v.pa_sistolica);
+  const diast  = vitals.map(v=>v.pa_diastolica);
+  const bcfArr = vitals.map(v=>v.bcf_bpm).filter(Boolean);
+
+  if(paChart) paChart.destroy();
+  paChart = new Chart(document.getElementById('chart-pa').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Sistólica',data:sist,borderColor:'#C97B63',backgroundColor:'rgba(201,123,99,.08)',tension:.35,pointRadius:4,fill:true},
+      {label:'Diastólica',data:diast,borderColor:'#3D7A8C',backgroundColor:'rgba(61,122,140,.06)',tension:.35,pointRadius:4,fill:true},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+      scales:{y:{suggestedMin:60,suggestedMax:180,grid:{color:'#eee'}}},
+      annotation:{annotations:{limHiper:{type:'line',yMin:140,yMax:140,borderColor:'#C97B63',borderWidth:1.5,borderDash:[5,5]}}}}
+  });
+
+  if(gestante && bcfArr.length){
+    document.getElementById('chart-bcf').parentElement.parentElement.style.display='block';
+    if(bcfChart) bcfChart.destroy();
+    bcfChart = new Chart(document.getElementById('chart-bcf').getContext('2d'),{
+      type:'line',
+      data:{labels:vitals.filter(v=>v.bcf_bpm).map(v=>fmtTs(v.timestamp)),
+        datasets:[{label:'BCF (bpm)',data:bcfArr,borderColor:'#84B59F',backgroundColor:'rgba(132,181,159,.1)',tension:.35,pointRadius:4,fill:true}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+        scales:{y:{suggestedMin:80,suggestedMax:200,grid:{color:'#eee'}}}}
+    });
+  } else {
+    document.getElementById('chart-bcf').parentElement.parentElement.style.display='none';
+  }
+
+  // Anomalias
+  const allAnomalias = vitals.flatMap(v=>v.anomalias||[]).filter(Boolean);
+  const unique = [...new Set(allAnomalias)];
+  document.getElementById('vitals-anomalias').innerHTML = unique.length
+    ? unique.map(a=>`<div class="anomalia-item">⚠️ ${a}</div>`).join('')
+    : '<div class="empty-state">Nenhuma anomalia detectada</div>';
+}
+
+function renderAudio(audio){
+  const el = document.getElementById('audio-list');
+  if(!audio.length){ el.innerHTML='<div class="empty-state">Sem análises de áudio registradas</div>'; return; }
+  el.innerHTML = audio.map(a=>`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header">
+        <h3>🎙️ Consulta — ${CTX_LABEL[a.contexto]||a.contexto}</h3>
+        <span style="font-size:11px;color:var(--muted)">${fmtTs(a.timestamp)}</span>
+      </div>
+      <div class="card-body">
+        ${a.transcricao?`<div style="background:#f8faf9;border-radius:8px;padding:12px;font-size:13px;color:var(--muted);margin-bottom:16px;font-style:italic;line-height:1.6">"${a.transcricao}"</div>`:''}
+        <div class="section-title">Scores de risco</div>
+        ${scoreBar('Depressão Pós-parto', a.score_depressao_pos_parto)}
+        ${scoreBar('Ansiedade',           a.score_ansiedade)}
+        ${scoreBar('Indício de Violência',a.score_indicio_violencia)}
+        ${scoreBar('Fadiga Hormonal',     a.score_fadiga_hormonal)}
+        ${(a.alertas||[]).map(al=>`<div class="anomalia-item" style="margin-top:10px">${al}</div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderVideo(video){
+  const el = document.getElementById('video-list');
+  if(!video.length){ el.innerHTML='<div class="empty-state">Sem análises de vídeo registradas</div>'; return; }
+  el.innerHTML = video.map(v=>`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header">
+        <h3>🎥 ${CTX_LABEL[v.contexto]||v.contexto}</h3>
+        <span style="font-size:11px;color:var(--muted)">${fmtTs(v.timestamp)}</span>
+      </div>
+      <div class="card-body">
+        ${scoreBar('Sangramento Anômalo',      v.sangramento_score)}
+        ${scoreBar('Sinais de Desconforto',    v.sinais_desconforto_score)}
+        ${scoreBar('Sinais de Violência',      v.sinais_violencia_score)}
+        ${(v.alertas||[]).map(a=>`<div class="anomalia-item" style="margin-top:10px">${a}</div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderFusion(fusion){
+  const el = document.getElementById('fusion-list');
+  if(!fusion.length){ el.innerHTML='<div class="empty-state">Sem análise de fusão registrada</div>'; return; }
+  el.innerHTML = fusion.map(f=>`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-header">
+        <h3>Fusão Multimodal</h3>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${riskBadge(f.nivel_risco_geral)}
+          ${f.requer_intervencao_humana?'<span class="tag" style="background:#fde8e8;color:#B33A3A">Requer revisão humana</span>':''}
+          <span style="font-size:11px;color:var(--muted)">${fmtTs(f.timestamp)}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        ${(f.scores||[]).map(sc=>`
+          <div class="fusion-score-card">
+            <div class="fc-header">
+              <div class="fc-cat">${CAT_LABEL[sc.categoria]||sc.categoria}</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                ${riskBadge(sc.nivel)}
+                <div class="fc-origin">${(sc.origem||[]).join(' + ') || '—'}</div>
+              </div>
+            </div>
+            ${scoreBar('',sc.score,true)}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function renderPatientAlerts(id){
+  try {
+    const all = await fetch(`${API}/dashboard/alerts?limit=50`).then(r=>r.json());
+    const mine = all.filter(a=>a.paciente_id===id);
+    const el = document.getElementById('patient-alerts-list');
+    el.innerHTML = mine.length ? mine.map(a=>alertHTML(a)).join('') : '<div class="empty-state">Nenhum alerta para esta paciente</div>';
+  } catch(e){}
+}
+
+function scoreBar(label, value, compact=false){
+  const pct = Math.round((value||0)*100);
+  const col = scoreColor(value||0);
+  return `<div class="score-row" style="${compact?'margin-bottom:6px':''}">
+    ${label?`<div class="s-label">${label}</div>`:''}
+    <div class="s-bar-wrap"><div class="s-bar" style="width:${pct}%;background:${col}"></div></div>
+    <div class="s-val" style="color:${col}">${pct}%</div>
+  </div>`;
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ════════════════════════════════════════════════════
+// ALERTAS
+// ════════════════════════════════════════════════════
+async function loadAlerts(){
+  try {
+    const all = await fetch(`${API}/dashboard/alerts?limit=100`).then(r=>r.json());
+    const filter = document.getElementById('alert-filter').value;
+    const filtered = filter ? all.filter(a=>a.nivel===filter) : all;
+    document.getElementById('all-alerts-list').innerHTML =
+      filtered.length ? filtered.map(a=>alertHTML(a,true)).join('') : '<div class="empty-state" style="padding:40px">Nenhum alerta encontrado</div>';
+  } catch(e){ toast('Erro: '+e.message,'error'); }
+}
+function alertHTML(a, withActions=false){
+  return `<div class="alert-item ${a.nivel} ${a.lido?'lido':''}" id="alert-${a.id}">
+    <div class="a-icon">${NIVEL_ICON[a.nivel]||'📢'}</div>
+    <div class="a-body">
+      <div class="a-title">${a.paciente_nome||''} ${riskBadge(a.nivel)}</div>
+      <div class="a-msg">${a.mensagem}</div>
+      <div class="a-meta">📧 ${a.canal||'—'} · ${fmtTs(a.timestamp)}</div>
+    </div>
+    ${withActions&&!a.lido?`<button class="btn btn-outline btn-sm" onclick="markRead(${a.id})">✓ Lido</button>`:''}
+  </div>`;
+}
+async function markRead(id){
+  await fetch(`${API}/alerts/${id}/read`,{method:'POST'});
+  const el = document.getElementById('alert-'+id);
+  if(el) el.classList.add('lido');
+  toast('Alerta marcado como lido','success');
+}
+async function markAllRead(){
+  const all = await fetch(`${API}/dashboard/alerts?limit=200`).then(r=>r.json());
+  await Promise.all(all.filter(a=>!a.lido).map(a=>fetch(`${API}/alerts/${a.id}/read`,{method:'POST'})));
+  loadAlerts();
+  toast('Todos os alertas marcados como lidos','success');
+}
+
+// ════════════════════════════════════════════════════
+// NOVA ANÁLISE
+// ════════════════════════════════════════════════════
+async function loadNewAnalysis(){
+  if(!allPatients.length) allPatients = await fetch(`${API}/patients`).then(r=>r.json());
+  const opts = allPatients.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  ['v-paciente','a-paciente','vid-paciente'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = opts;
+  });
+}
+
+async function submitVitals(){
+  const pacienteId = document.getElementById('v-paciente').value;
+  const sist  = parseFloat(document.getElementById('v-sist').value)||null;
+  const diast = parseFloat(document.getElementById('v-diast').value)||null;
+  const bcf   = parseFloat(document.getElementById('v-bcf').value)||null;
+  const prot  = document.getElementById('v-prot').value;
+  const med   = document.getElementById('v-med').value||null;
+  const dose  = parseFloat(document.getElementById('v-dose').value)||null;
+
+  if(!sist&&!diast){ toast('Informe ao menos a pressão arterial','error'); return; }
+
+  const payload = {
+    paciente_id: String(pacienteId),
+    pressao_sistolica: sist, pressao_diastolica: diast,
+    bcf_bpm: bcf,
+    proteinuria: prot==='true'?true:prot==='false'?false:null,
+    prescricao_hormonal: med, dose_mg: dose,
+  };
+  try {
+    const res = await fetch(`${API}/patients/${pacienteId}/vitals`,{
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    }).then(r=>r.json());
+    const el = document.getElementById('vitals-result');
+    el.style.display='block';
+    el.innerHTML = `
+      <div class="card" style="border-color:${res.nivel_risco==='critico'?'#B33A3A':res.nivel_risco==='alto'?'#C97B63':'var(--border)'}">
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <strong>Resultado:</strong> ${riskBadge(res.nivel_risco)}
+          </div>
+          ${res.anomalias.length?res.anomalias.map(a=>`<div class="anomalia-item">${a}</div>`).join(''):'<div style="color:var(--secondary)">✅ Nenhuma anomalia detectada</div>'}
+        </div>
+      </div>`;
+    toast('Leitura registrada com sucesso','success');
+  } catch(e){ toast('Erro: '+e.message,'error'); }
+}
+
+async function submitAudio(){
+  const file = document.getElementById('a-file').files[0];
+  const pacienteId = document.getElementById('a-paciente').value;
+  const contexto = document.getElementById('a-contexto').value;
+  if(!file){ toast('Selecione um arquivo de áudio','error'); return; }
+
+  const fd = new FormData();
+  fd.append('arquivo', file);
+  toast('Enviando e analisando áudio…');
+  try {
+    const res = await fetch(`${API}/analyze/audio?paciente_id=${pacienteId}&contexto=${contexto}`,
+      {method:'POST', body:fd}).then(r=>r.json());
+    const el = document.getElementById('audio-result');
+    el.style.display='block';
+    el.innerHTML = `<div class="card"><div class="card-body">
+      ${scoreBar('Depressão Pós-parto',res.score_depressao_pos_parto)}
+      ${scoreBar('Ansiedade',res.score_ansiedade)}
+      ${scoreBar('Indício de Violência',res.score_indicio_violencia)}
+      ${scoreBar('Fadiga Hormonal',res.score_fadiga_hormonal)}
+      ${(res.alertas||[]).map(a=>`<div class="anomalia-item">${a}</div>`).join('')}
+    </div></div>`;
+    toast('Análise de áudio concluída','success');
+  } catch(e){ toast('Erro: '+e.message,'error'); }
+}
+
+async function submitVideo(){
+  const file = document.getElementById('vid-file').files[0];
+  const pacienteId = document.getElementById('vid-paciente').value;
+  const contexto = document.getElementById('vid-contexto').value;
+  if(!file){ toast('Selecione um arquivo de vídeo','error'); return; }
+
+  const fd = new FormData();
+  fd.append('arquivo', file);
+  toast('Enviando e analisando vídeo…');
+  try {
+    const res = await fetch(`${API}/analyze/video?paciente_id=${pacienteId}&contexto=${contexto}`,
+      {method:'POST', body:fd}).then(r=>r.json());
+    const el = document.getElementById('video-result');
+    el.style.display='block';
+    el.innerHTML = `<div class="card"><div class="card-body">
+      ${scoreBar('Sangramento Anômalo',res.sangramento_score)}
+      ${scoreBar('Sinais de Desconforto',res.sinais_desconforto_score)}
+      ${scoreBar('Sinais de Violência',res.sinais_violencia_score)}
+      ${(res.alertas||[]).map(a=>`<div class="anomalia-item">${a}</div>`).join('')}
+    </div></div>`;
+    toast('Análise de vídeo concluída','success');
+  } catch(e){ toast('Erro: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════
+// MONITOR AO VIVO
+// ════════════════════════════════════════════════════
+async function loadLiveMonitor(){
+  if(!allPatients.length) allPatients = await fetch(`${API}/patients`).then(r=>r.json());
+  const sel = document.getElementById('monitor-patient');
+  sel.innerHTML = allPatients.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  startMonitor();
+}
+function openLiveForPatient(id){
+  nav('live-monitor');
+  setTimeout(()=>{
+    const sel = document.getElementById('monitor-patient');
+    sel.value = id;
+    startMonitor();
+  }, 100);
+}
+function openLiveMonitor(){
+  if(currentPatientId) openLiveForPatient(currentPatientId);
+  else nav('live-monitor');
+}
+
+function startMonitor(){
+  if(liveWs){ liveWs.close(); liveWs=null; }
+  liveData = {labels:[],sist:[],diast:[]};
+  document.getElementById('live-log').innerHTML='';
+
+  const id = document.getElementById('monitor-patient').value;
+  if(!id) return;
+
+  // Chart ao vivo
+  if(liveChart) liveChart.destroy();
+  liveChart = new Chart(document.getElementById('chart-live-pa').getContext('2d'),{
+    type:'line',
+    data:{labels:liveData.labels,datasets:[
+      {label:'Sistólica',data:liveData.sist,borderColor:'#C97B63',backgroundColor:'rgba(201,123,99,.08)',tension:.3,pointRadius:3,fill:true},
+      {label:'Diastólica',data:liveData.diast,borderColor:'#3D7A8C',backgroundColor:'rgba(61,122,140,.06)',tension:.3,pointRadius:3,fill:true},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{position:'top'}},scales:{y:{suggestedMin:60,suggestedMax:180}}}
+  });
+
+  const wsUrl = `ws://localhost:8000/ws/monitor/${id}`;
+  liveWs = new WebSocket(wsUrl);
+  liveWs.onmessage = (evt)=>{
+    const d = JSON.parse(evt.data);
+    // update big values
+    document.getElementById('live-sist').textContent  = d.sist.toFixed(1);
+    document.getElementById('live-diast').textContent = d.diast.toFixed(1);
+    document.getElementById('live-bcf').textContent   = d.bcf ? d.bcf.toFixed(0) : '—';
+    document.getElementById('live-risk-badge').innerHTML = riskBadge(d.nivel);
+    document.getElementById('live-risk-ts').textContent  = d.ts;
+
+    // chart
+    if(liveData.labels.length>25){ liveData.labels.shift(); liveData.sist.shift(); liveData.diast.shift(); }
+    liveData.labels.push(d.ts);
+    liveData.sist.push(d.sist);
+    liveData.diast.push(d.diast);
+    liveChart.update();
+
+    // log
+    const log = document.getElementById('live-log');
+    const line = document.createElement('div');
+    const col = {critico:'#B33A3A',alto:'#C97B63',medio:'#a07020',baixo:'#2d7a5e'};
+    line.innerHTML = `<span style="color:#888">${d.ts}</span> PA <span style="color:#C97B63">${d.sist}/${d.diast}</span>${d.bcf?` BCF <span style="color:#84B59F">${d.bcf}</span>`:''} → <span style="color:${col[d.nivel]||'#555'};font-weight:700">${d.nivel.toUpperCase()}</span>`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+
+    // toast crítico
+    if(d.nivel==='critico') toast(`⚠️ PA CRÍTICA: ${d.sist}/${d.diast} mmHg`,'error');
+  };
+  liveWs.onerror = ()=> toast('Erro no WebSocket de monitoramento','error');
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+loadDashboard();
+</script>
+</body>
+</html>

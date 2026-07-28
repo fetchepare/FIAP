@@ -1,0 +1,28 @@
+# ── Core API ──────────────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+gunicorn==23.0.0
+pydantic==2.10.4
+python-multipart==0.0.20
+python-dotenv==1.0.1
+websockets==13.1
+aiofiles==24.1.0
+
+# ── Processamento numérico (leve) ────────────────────────────────────────────
+numpy==1.26.4
+
+# ── Azure Cognitive Services ─────────────────────────────────────────────────
+azure-ai-textanalytics==5.3.0
+azure-communication-email==1.0.0
+azure-core==1.32.0
+
+# ── Google Cloud Speech (substitui Azure Speech) ──────────────────────────────
+google-cloud-speech==2.27.0
+
+# ── Pacotes pesados de ML — opcionais (demo mode ativo sem eles) ──────────────
+# Descomente localmente se quiser processamento real de vídeo/áudio:
+# ultralytics==8.3.40
+# mediapipe==0.10.18
+# opencv-python-headless==4.10.0.84
+# librosa==0.10.2.post1
+# soundfile==0.12.1
