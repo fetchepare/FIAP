@@ -1,0 +1,100 @@
+executar o projeto **Guardiã AI**,
+formas: **com Docker** (recomendada e mais simples) ou **localmente com Python**.
+
+---
+
+### Opção 1: Com Docker (Recomendada — 1 comando)
+
+Não precisa instalar dependências do Python nem bibliotecas de Machine Learning no computador hospedeiro.
+
+#### 1. Clonar o repositório e entrar na pasta:
+```bash
+git clone https://github.com/fetchepare/FIAP.git
+cd FIAP
+```
+
+#### 2. Criar o arquivo `.env`:
+```bash
+cp .env.example .env
+```
+> *(Opcional)*: Se quiser usar o modelo Gemini em nuvem, edite o `.env` e insira sua `GEMINI_API_KEY`. Se deixar em branco, o sistema funciona normalmente em **modo offline determinístico**.
+
+#### 3. Subir a aplicação:
+```bash
+docker compose up --build
+```
+*(O Docker vai instalar os pacotes, treinar o modelo de Machine Learning e inicializar os serviços automaticamente).*
+
+#### 4. Acessar no navegador:
+- **Interface Web (Streamlit):** [http://localhost:8501](http://localhost:8501)
+- **Documentação da API (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Status da API (Healthcheck):** [http://localhost:8000/health](http://localhost:8000/health)
+
+#### 🔑 Credenciais de Primeiro Acesso:
+- **Usuário:** `admin`
+- **Senha:** `TroqueEstaSenha123` *(ou o valor configurado em `GUARDIA_ADMIN_PASSWORD` no `.env`)*
+
+---
+
+### Opção 2: Sem Docker (Ambiente Virtual Python)
+
+Requer **Python 3.12+** instalado na máquina.
+
+#### 1. Clonar e criar ambiente virtual:
+```bash
+git clone https://github.com/fetchepare/FIAP.git
+cd FIAP
+
+python3 -m venv .venv
+source .venv/bin/activate       # No Windows: .venv\Scripts\activate
+```
+
+#### 2. Instalar dependências:
+```bash
+pip install -r requirements.txt
+```
+
+#### 3. Configurar ambiente e treinar o modelo:
+```bash
+cp .env.example .env
+export PYTHONPATH=src           # No Windows PowerShell: $env:PYTHONPATH="src"
+
+# Treina o modelo ML, calcula métricas e gera gráficos
+python -m guardia.ml.train
+```
+
+#### 4. Executar os serviços:
+- **Interface Web:**
+  ```bash
+  streamlit run app/streamlit_app.py
+  ```
+- **API REST (opcional, em outro terminal):**
+  ```bash
+  uvicorn guardia.api:app --host 0.0.0.0 --port 8000
+  ```
+
+---
+
+### 🧪 Como rodar os Testes Automatizados:
+
+Para validar se todo o fluxo (ML, SHAP, RAG, autenticação JWT, guardrails e criptografia) está funcionando:
+
+```bash
+PYTHONPATH=src pytest -q
+# Resultado esperado: 14 passed
+```
+
+---
+
+### 👥 Perfis de Acesso para Testar o Sistema:
+
+| Perfil | Permissões |
+|---|---|
+| **Admin** | Criar novos usuários, visualizar todo o histórico e trilha de auditoria SHA-256. |
+| **Profissional** | Fazer triagem citológica, ver gráfico SHAP, perguntar ao assistente de protocolos RAG e homologar a **Decisão Médica Final**. |
+| **Auditor** | Somente leitura das análises e da trilha de conformidade ética/LGPD. |
+
+Para criar um usuário profissional via linha de comando:
+```bash
+python -m guardia.cli create-user maria "Dra. Maria Silva" profissional
+```
