@@ -1,0 +1,49 @@
+services:
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: guardia_ui
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      - GUARDIA_DB=/app/data/state/guardia.db
+      - GUARDIA_DATA_DIR=/app/data/state
+    volumes:
+      - guardia-data:/app/data/state
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: guardia_api
+    restart: unless-stopped
+    command: ["uvicorn", "guardia.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - GUARDIA_DB=/app/data/state/guardia.db
+      - GUARDIA_DATA_DIR=/app/data/state
+    volumes:
+      - guardia-data:/app/data/state
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  guardia-data:
+    name: guardia_ai_data
